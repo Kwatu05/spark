@@ -1,0 +1,278 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Profile fields
+  name              String?
+  age               Int?
+  bio               String?
+  location          String?
+  profession        String?
+  avatar            String?
+  interests         String? // JSON array stored as string
+  isVerified        Boolean  @default(false)
+  connectionPreference String?
+
+  // Auth tokens
+  refreshTokens RefreshToken[]
+
+  // Relations
+  posts        Post[]
+  connections  Connection[] @relation("UserConnections")
+  connectionsReceived Connection[] @relation("ConnectionReceived")
+  likes        Like[]
+  comments     Comment[]
+  sparks       Spark[]
+  verificationRequests VerificationRequest[]
+  notifications        Notification[]
+  pushSubscriptions    PushSubscription[]
+  notificationSettings NotificationSettings?
+
+  @@index([email])
+  @@index([username])
+  @@index([role])
+  @@index([isVerified])
+  @@index([createdAt])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([createdAt])
+  @@map("refresh_tokens")
+}
+
+model Post {
+  id           String   @id @default(cuid())
+  userId       String
+  type         PostType @default(PHOTO)
+  content      String? // JSON array of URLs stored as string
+  caption      String
+  activityTags String? // JSON array stored as string
+  location     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes    Like[]
+  comments Comment[]
+  sparks   Spark[]
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([type])
+  @@index([location])
+  @@map("posts")
+}
+
+model Connection {
+  id           String         @id @default(cuid())
+  userId       String
+  connectedUserId String
+  status       ConnectionStatus @default(PENDING)
+  mutualSpark  Boolean        @default(false)
+  sparkContext String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  user           User @relation("UserConnections", fields: [userId], references: [id], onDelete: Cascade)
+  connectedUser  User @relation("ConnectionReceived", fields: [connectedUserId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, connectedUserId])
+  @@index([userId])
+  @@index([connectedUserId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("connections")
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@index([userId])
+  @@index([postId])
+  @@index([createdAt])
+  @@map("likes")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([postId])
+  @@index([createdAt])
+  @@map("comments")
+}
+
+model Spark {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@map("sparks")
+}
+
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum PostType {
+  PHOTO
+  VIDEO
+  CAROUSEL
+}
+
+enum ConnectionStatus {
+  PENDING
+  CONNECTED
+  SPARKED
+  BLOCKED
+}
+
+model VerificationRequest {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Verification data
+  selfieUrl   String?  // URL to uploaded selfie
+  idDocumentUrl String? // URL to uploaded ID document
+  socialLinks String?  // JSON object with social media links
+
+  // Status and metadata
+  status      VerificationStatus @default(PENDING)
+  submittedAt DateTime @default(now())
+  reviewedAt  DateTime?
+  reviewedBy  String?  // Admin user ID who reviewed
+  rejectionReason String?
+
+  // Admin notes
+  adminNotes  String?
+
+  @@index([userId])
+  @@index([status])
+  @@index([submittedAt])
+  @@index([reviewedAt])
+  @@index([reviewedBy])
+  @@map("verification_requests")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type      NotificationType
+  title     String
+  message   String
+  data      String?  // JSON data
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  readAt    DateTime?
+
+  @@index([userId])
+  @@index([type])
+  @@index([read])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  endpoint  String
+  p256dhKey String
+  authKey   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, endpoint])
+  @@index([userId])
+  @@index([endpoint])
+  @@index([updatedAt])
+  @@map("push_subscriptions")
+}
+
+model NotificationSettings {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  pushEnabled           Boolean  @default(true)
+  emailEnabled          Boolean  @default(true)
+  likeNotifications     Boolean  @default(true)
+  commentNotifications  Boolean  @default(true)
+  followNotifications   Boolean  @default(true)
+  mentionNotifications  Boolean  @default(true)
+  systemNotifications   Boolean  @default(true)
+  marketingNotifications Boolean @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([userId])
+  @@map("notification_settings")
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum NotificationType {
+  LIKE
+  COMMENT
+  FOLLOW
+  MENTION
+  SYSTEM
+}
