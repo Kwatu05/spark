@@ -31,6 +31,7 @@ import cacheRouter from './routes/cache';
 import notificationsRouter from './routes/notifications';
 import searchRouter from './routes/search';
 import pushNotificationsRouter from './routes/pushNotifications';
+import loadTestingRouter from './routes/loadTesting';
 import backupRouter from './routes/backup';
 import { metrics, requestTracing, logError } from './middleware/observability';
 import { 
@@ -138,6 +139,7 @@ app.use('/cache', adminLimiter, cacheRouter);
 app.use('/notifications', notificationsRouter);
 app.use('/search', searchRouter);
 app.use('/push-notifications', pushNotificationsRouter);
+app.use('/load-testing', loadTestingRouter);
 app.use('/backup', backupRouter);
 // Enhanced metrics endpoint
 app.get(config.monitoring.metricsPath, (_req, res) => {
