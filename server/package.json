@@ -21,6 +21,7 @@
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@prisma/client": "^6.15.0",
+    "@types/crypto-js": "^4.2.2",
     "@types/fluent-ffmpeg": "^2.1.27",
     "@types/redis": "^4.0.10",
     "@types/socket.io": "^3.0.1",
@@ -28,6 +29,7 @@
     "@types/web-push": "^3.6.4",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "crypto-js": "^4.2.0",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "express-rate-limit": "^8.1.0",

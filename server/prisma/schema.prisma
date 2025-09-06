@@ -44,6 +44,16 @@ model User {
   notifications        Notification[]
   pushSubscriptions    PushSubscription[]
   notificationSettings NotificationSettings?
+  
+  // GDPR compliance fields
+  marketingEmails      Boolean @default(false)
+  analyticsTracking    Boolean @default(true)
+  dataSharing          Boolean @default(false)
+  gdprConsent          Boolean @default(false)
+  consentDate          DateTime?
+  dataProcessingRestrictions DataProcessingRestriction[]
+  consentRecords       ConsentRecord[]
+  dataProcessingActivities DataProcessingActivity[]
 
   @@index([email])
   @@index([username])
@@ -275,4 +285,153 @@ enum NotificationType {
   FOLLOW
   MENTION
   SYSTEM
+}
+
+// GDPR Compliance Models
+
+model ConsentRecord {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  consentType     ConsentType
+  granted         Boolean
+  consentDate     DateTime @default(now())
+  withdrawalDate  DateTime?
+  consentMethod   ConsentMethod @default(EXPLICIT)
+  ipAddress       String?
+  userAgent       String?
+  version         String   @default("1.0")
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([consentType])
+  @@index([consentDate])
+  @@map("consent_records")
+}
+
+model DataProcessingRestriction {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  restrictions  String   // JSON array of restrictions
+  active        Boolean  @default(true)
+  reason        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([active])
+  @@map("data_processing_restrictions")
+}
+
+model DataProcessingActivity {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  activity    String   // e.g., 'data_export', 'data_deletion', 'consent_given'
+  description String
+  timestamp   DateTime @default(now())
+  ipAddress   String?
+  userAgent   String?
+  metadata    String?  // JSON metadata
+
+  @@index([userId])
+  @@index([activity])
+  @@index([timestamp])
+  @@map("data_processing_activities")
+}
+
+model DataBreachRecord {
+  id                    String   @id @default(cuid())
+  description           String
+  dataCategories        String   // JSON array
+  affectedUsers         Int
+  severity              BreachSeverity
+  discoveredAt          DateTime @default(now())
+  reportedAt            DateTime?
+  resolvedAt            DateTime?
+  status                BreachStatus @default(DISCOVERED)
+  notificationRequired  Boolean  @default(false)
+  notificationDeadline  DateTime?
+  actions               String   // JSON array of actions taken
+  reportToAuthorities   Boolean  @default(false)
+  authorityReportedAt   DateTime?
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([severity])
+  @@index([status])
+  @@index([discoveredAt])
+  @@map("data_breach_records")
+}
+
+model DataRetentionPolicy {
+  id                String   @id @default(cuid())
+  dataCategory      String
+  retentionPeriod   Int      // in days
+  legalBasis        String
+  description       String?
+  active            Boolean  @default(true)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([dataCategory])
+  @@index([active])
+  @@map("data_retention_policies")
+}
+
+model PrivacyPolicyVersion {
+  id          String   @id @default(cuid())
+  version     String
+  content     String
+  effectiveDate DateTime @default(now())
+  active      Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([version])
+  @@index([effectiveDate])
+  @@index([active])
+  @@map("privacy_policy_versions")
+}
+
+// GDPR Enums
+
+enum ConsentType {
+  MARKETING
+  ANALYTICS
+  PERSONALIZATION
+  DATA_SHARING
+  COOKIES
+  LOCATION
+  PROFILING
+}
+
+enum ConsentMethod {
+  EXPLICIT
+  OPT_IN
+  OPT_OUT
+  IMPLIED
+}
+
+enum BreachSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum BreachStatus {
+  DISCOVERED
+  INVESTIGATING
+  REPORTED
+  RESOLVED
 }

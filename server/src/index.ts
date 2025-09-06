@@ -32,6 +32,7 @@ import notificationsRouter from './routes/notifications';
 import searchRouter from './routes/search';
 import pushNotificationsRouter from './routes/pushNotifications';
 import loadTestingRouter from './routes/loadTesting';
+import gdprRouter from './routes/gdpr';
 import backupRouter from './routes/backup';
 import { metrics, requestTracing, logError } from './middleware/observability';
 import { 
@@ -49,6 +50,13 @@ import {
   sanitizeRequest, 
   requestSizeLimiter 
 } from './middleware/security';
+import { 
+  gdprComplianceMiddleware,
+  privacyByDesign,
+  respectDataSubjectRights,
+  breachDetection,
+  cookieConsent
+} from './middleware/gdpr';
 
 // Validate configuration
 const configValidation = validateConfig();
@@ -97,6 +105,13 @@ app.use(requestTracing);
 // Apply general rate limiting to all routes
 app.use(generalLimiter);
 
+// GDPR compliance middleware
+app.use(gdprComplianceMiddleware);
+app.use(privacyByDesign);
+app.use(respectDataSubjectRights);
+app.use(breachDetection);
+app.use(cookieConsent);
+
 // Serve static files from uploads directory
 app.use('/uploads', express.static(config.fileUpload.uploadPath));
 
@@ -140,6 +155,7 @@ app.use('/notifications', notificationsRouter);
 app.use('/search', searchRouter);
 app.use('/push-notifications', pushNotificationsRouter);
 app.use('/load-testing', loadTestingRouter);
+app.use('/gdpr', gdprRouter);
 app.use('/backup', backupRouter);
 // Enhanced metrics endpoint
 app.get(config.monitoring.metricsPath, (_req, res) => {
