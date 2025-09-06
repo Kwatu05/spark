@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spark-backend
+  namespace: spark-production
+  labels:
+    app: spark-backend
+    environment: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: spark-backend
+  template:
+    metadata:
+      labels:
+        app: spark-backend
+        environment: production
+    spec:
+      containers:
+      - name: spark-backend
+        image: ghcr.io/kwatu05/spark-backend:latest
+        ports:
+        - containerPort: 4000
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: spark-secrets
+              key: database-url
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: spark-secrets
+              key: jwt-secret
+        - name: JWT_REFRESH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: spark-secrets
+              key: jwt-refresh-secret
+        - name: REDIS_HOST
+          value: "redis-service"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: spark-secrets
+              key: redis-password
+        - name: VAPID_PUBLIC_KEY
+          valueFrom:
+            secretKeyRef:
+              name: spark-secrets
+              key: vapid-public-key
+        - name: VAPID_PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: spark-secrets
+              key: vapid-private-key
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 4000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 4000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: uploads
+          mountPath: /app/uploads
+        - name: logs
+          mountPath: /app/logs
+        - name: backups
+          mountPath: /app/backups
+      volumes:
+      - name: uploads
+        persistentVolumeClaim:
+          claimName: spark-uploads-pvc
+      - name: logs
+        persistentVolumeClaim:
+          claimName: spark-logs-pvc
+      - name: backups
+        persistentVolumeClaim:
+          claimName: spark-backups-pvc
+      imagePullSecrets:
+      - name: ghcr-secret
