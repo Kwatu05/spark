@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Repeat2, Sparkles } from 'lucide-react';
 import { Post } from '../App';
-import { mockPosts } from '../data/mockData';
 
 type RepostRecord = {
   postId: string;

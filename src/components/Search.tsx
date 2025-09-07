@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Search as SearchIcon, X, Clock, TrendingUp } from 'lucide-react';
 import { User } from '../App';
-import { mockUsers } from '../data/mockData';
 
 interface SearchProps {
   onOpenChat: (user: User) => void;

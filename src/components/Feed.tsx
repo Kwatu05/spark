@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, Bookmark, MoreHorizontal, MapPin, Clock, Repeat2, MessageSquare } from 'lucide-react';
 import { ModerationModal } from './ModerationModal';
 import { User, Post } from '../App';
-import { mockPosts } from '../data/mockData';
 import { api } from '../lib/api';
 import { CommentsModal } from './CommentsModal';
 import { SaveModal } from './SaveModal';
@@ -13,7 +12,7 @@ interface FeedProps {
 }
 
 export const Feed: React.FC<FeedProps> = ({ onOpenChat }) => {
-  const [posts, setPosts] = useState<Post[]>(mockPosts);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [mode, setMode] = useState<'recency' | 'explore' | 'nearby' | 'graph'>('recency');
   const [privacy, setPrivacy] = useState(() => {
     try { return JSON.parse(localStorage.getItem('app_privacy_settings') || '{}'); } catch { return {}; }
@@ -21,19 +20,7 @@ export const Feed: React.FC<FeedProps> = ({ onOpenChat }) => {
   useEffect(() => {
     try { setPrivacy(JSON.parse(localStorage.getItem('app_privacy_settings') || '{}')); } catch {}
   }, []);
-  const [reposts, setReposts] = useState<Record<string, { count: number; isReposted: boolean }>>(() => {
-    const base = Object.fromEntries(mockPosts.map(p => [p.id, { count: 0, isReposted: false }]));
-    try {
-      const raw = localStorage.getItem('reposts');
-      if (raw) {
-        const parsed: { postId: string; at: number }[] = JSON.parse(raw);
-        parsed.forEach(r => {
-          if (base[r.postId]) base[r.postId].isReposted = true;
-        });
-      }
-    } catch {}
-    return base;
-  });
+  const [reposts, setReposts] = useState<Record<string, { count: number; isReposted: boolean }>>({});
   const [lastTapByPostId, setLastTapByPostId] = useState<Record<string, number>>({});
   const [showBurstByPostId, setShowBurstByPostId] = useState<Record<string, boolean>>({});
   const [openCommentsFor, setOpenCommentsFor] = useState<string | null>(null);

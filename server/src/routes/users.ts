@@ -1,46 +1,96 @@
 import { Router } from 'express';
+import { PrismaClient } from '@prisma/client';
+import { requireAuth, AuthenticatedRequest } from '../middleware/auth';
 
 const router = Router();
+const prisma = new PrismaClient();
 
-type SimpleUser = {
-  id: string;
-  name: string;
-  age: number;
-  location: string;
-  profession: string;
-  avatar: string;
-  connectionPreference: string;
-  interests: string[];
-  isVerified?: boolean;
-};
+// Get all users (for discovery/feed)
+router.get('/', requireAuth, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { page = 1, limit = 20, search } = req.query;
+    const skip = (Number(page) - 1) * Number(limit);
 
-const users: SimpleUser[] = [
-  {
-    id: 'u1', name: 'Alice', age: 26, location: 'London', profession: 'Designer',
-    avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-    connectionPreference: 'Friends', interests: ['Hiking','Art','Coffee'], isVerified: true,
-  },
-  {
-    id: 'u2', name: 'Bob', age: 29, location: 'Manchester', profession: 'Engineer',
-    avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-    connectionPreference: 'Long-term', interests: ['Music','Cycling','Cooking']
-  },
-  {
-    id: 'u3', name: 'Cara', age: 24, location: 'Birmingham', profession: 'Marketer',
-    avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-    connectionPreference: 'Short-term', interests: ['Dance','Yoga','Travel']
-  },
-];
+    const where = search ? {
+      OR: [
+        { name: { contains: search as string, mode: 'insensitive' } },
+        { username: { contains: search as string, mode: 'insensitive' } },
+        { bio: { contains: search as string, mode: 'insensitive' } }
+      ]
+    } : {};
 
-router.get('/', (_req, res) => {
-  res.json({ ok: true, users });
+    const users = await prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        age: true,
+        bio: true,
+        location: true,
+        profession: true,
+        avatar: true,
+        interests: true,
+        connectionPreference: true,
+        isVerified: true,
+        createdAt: true
+      },
+      skip,
+      take: Number(limit),
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // Parse interests from JSON strings
+    const usersWithParsedInterests = users.map(user => ({
+      ...user,
+      interests: user.interests ? JSON.parse(user.interests) : []
+    }));
+
+    res.json({ ok: true, users: usersWithParsedInterests });
+  } catch (error) {
+    console.error('Get users error:', error);
+    res.status(500).json({ ok: false, error: 'Failed to fetch users' });
+  }
 });
 
-router.get('/:id', (req, res) => {
-  const { id } = req.params;
-  const user = users.find(u => u.id === id);
-  if (!user) return res.status(404).json({ error: 'not found' });
-  res.json({ ok: true, user });
+// Get user by ID
+router.get('/:id', requireAuth, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        age: true,
+        bio: true,
+        location: true,
+        profession: true,
+        avatar: true,
+        interests: true,
+        connectionPreference: true,
+        isVerified: true,
+        createdAt: true
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ ok: false, error: 'User not found' });
+    }
+
+    // Parse interests from JSON string
+    const userWithParsedInterests = {
+      ...user,
+      interests: user.interests ? JSON.parse(user.interests) : []
+    };
+
+    res.json({ ok: true, user: userWithParsedInterests });
+  } catch (error) {
+    console.error('Get user error:', error);
+    res.status(500).json({ ok: false, error: 'Failed to fetch user' });
+  }
 });
 
 export default router;

@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, MessageCircle, Share, MoreVertical, Volume2, VolumeX, Repeat2, Flag } from 'lucide-react';
 import { User } from '../App';
-import { mockUsers } from '../data/mockData';
 import { api } from '../lib/api';
 
 interface MomentVideo {
@@ -27,43 +26,8 @@ export const Moments: React.FC<MomentsProps> = ({ onOpenChat }) => {
   const actionsMenuRef = useRef<HTMLDivElement | null>(null);
   const touchStartYRef = useRef<number | null>(null);
 
-  const mockMoments: MomentVideo[] = [
-    {
-      id: '1',
-      user: mockUsers[0],
-      videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
-      title: 'Perfect morning hike',
-      description: 'Started my day with this beautiful trail. Who wants to join next time? 🥾',
-      likes: 234,
-      isLiked: false,
-      activityTags: ['Hiking', 'Outdoors', 'Fitness']
-    },
-    {
-      id: '2',
-      user: mockUsers[1],
-      videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4',
-      title: 'Cooking experiment',
-      description: 'Trying a new pasta recipe! Not sure if it worked but it was fun 😅',
-      likes: 189,
-      isLiked: true,
-      activityTags: ['Cooking', 'Food', 'Learning']
-    },
-    {
-      id: '3',
-      user: mockUsers[2],
-      videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
-      title: 'Dancing in my room',
-      description: 'When your favorite song comes on and no one\'s watching 💃',
-      likes: 567,
-      isLiked: false,
-      activityTags: ['Dancing', 'Music', 'Fun']
-    }
-  ];
-
-  const [moments, setMoments] = useState<MomentVideo[]>(mockMoments);
-  const [reposts, setReposts] = useState<Record<string, { count: number; isReposted: boolean }>>(
-    () => Object.fromEntries(mockMoments.map(m => [m.id, { count: 0, isReposted: false }]))
-  );
+  const [moments, setMoments] = useState<MomentVideo[]>([]);
+  const [reposts, setReposts] = useState<Record<string, { count: number; isReposted: boolean }>>({});
 
   useEffect(() => {
     api.get<{ ok: boolean; moments: { id: string; videoUrl: string; likes: number; isLiked: boolean; coAuthorId?: string }[] }>(`/moments`)

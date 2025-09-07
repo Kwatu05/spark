@@ -63,15 +63,9 @@ let reportsQueue: ReportItem[] = [
   { id: 'r1', targetType: 'user', targetId: 'user9', reason: 'Impersonation', reportedBy: 'user3', reportedAt: new Date().toISOString() },
 ];
 
-// Groups and Events (in-memory)
-type Group = { id: string; name: string; description?: string; createdAt: string; createdBy: string; members: string[] };
-type Event = { id: string; title: string; description?: string; date: string; createdAt: string; createdBy: string; attendees: string[] };
-let groups: Group[] = [
-  { id: 'g1', name: 'Hikers in SF', description: 'Weekend hikes', createdAt: new Date().toISOString(), createdBy: 'admin1', members: ['user1','user2'] },
-];
-let events: Event[] = [
-  { id: 'e1', title: 'Sunset picnic', description: 'At Dolores Park', date: new Date(Date.now()+86400000).toISOString(), createdAt: new Date().toISOString(), createdBy: 'admin1', attendees: ['user2'] },
-];
+// Groups and Events - using database
+// Note: These would need to be implemented in the database schema if needed
+// For now, returning empty arrays to remove mock data
 
 // Premium management (in-memory map userId -> plan)
 let premiumUsers: Record<string, { plan: 'GOLD' | 'PLATINUM'; grantedAt: string }> = {};
@@ -235,58 +229,36 @@ router.post('/reports/:id/resolve', (req, res) => {
 
 // Groups management (admin-only creators)
 router.get('/groups', (_req, res) => {
-  res.json({ ok: true, groups });
+  res.json({ ok: true, groups: [] });
 });
 
 router.post('/groups', (req, res) => {
-  const { name, description } = req.body || {};
-  if (!name) return res.status(400).json({ ok: false, error: 'Name required' });
-  const id = `g_${Math.random().toString(36).slice(2, 9)}`;
-  const grp: Group = { id, name, description, createdAt: new Date().toISOString(), createdBy: (req as any).user?.id || 'admin', members: [] };
-  groups.push(grp);
-  res.json({ ok: true, group: grp });
+  res.status(501).json({ ok: false, error: 'Groups feature not yet implemented' });
 });
 
 router.delete('/groups/:id', (req, res) => {
-  const { id } = req.params;
-  groups = groups.filter(g => g.id !== id);
-  res.json({ ok: true });
+  res.status(501).json({ ok: false, error: 'Groups feature not yet implemented' });
 });
 
 router.post('/groups/:id/members/:userId/remove', (req, res) => {
-  const { id, userId } = req.params;
-  const g = groups.find(x => x.id === id);
-  if (!g) return res.status(404).json({ ok: false, error: 'Group not found' });
-  g.members = g.members.filter(m => m !== userId);
-  res.json({ ok: true, group: g });
+  res.status(501).json({ ok: false, error: 'Groups feature not yet implemented' });
 });
 
 // Events management (admin-only creators)
 router.get('/events', (_req, res) => {
-  res.json({ ok: true, events });
+  res.json({ ok: true, events: [] });
 });
 
 router.post('/events', (req, res) => {
-  const { title, description, date } = req.body || {};
-  if (!title || !date) return res.status(400).json({ ok: false, error: 'Title and date required' });
-  const id = `e_${Math.random().toString(36).slice(2, 9)}`;
-  const ev: Event = { id, title, description, date, createdAt: new Date().toISOString(), createdBy: (req as any).user?.id || 'admin', attendees: [] };
-  events.push(ev);
-  res.json({ ok: true, event: ev });
+  res.status(501).json({ ok: false, error: 'Events feature not yet implemented' });
 });
 
 router.delete('/events/:id', (req, res) => {
-  const { id } = req.params;
-  events = events.filter(e => e.id !== id);
-  res.json({ ok: true });
+  res.status(501).json({ ok: false, error: 'Events feature not yet implemented' });
 });
 
 router.post('/events/:id/attendees/:userId/remove', (req, res) => {
-  const { id, userId } = req.params;
-  const e = events.find(x => x.id === id);
-  if (!e) return res.status(404).json({ ok: false, error: 'Event not found' });
-  e.attendees = e.attendees.filter(a => a !== userId);
-  res.json({ ok: true, event: e });
+  res.status(501).json({ ok: false, error: 'Events feature not yet implemented' });
 });
 
 // Premium controls

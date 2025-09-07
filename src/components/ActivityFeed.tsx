@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Heart, UserPlus, Sparkles, Clock } from 'lucide-react';
 import { User } from '../App';
-import { mockUsers } from '../data/mockData';
 
 interface Activity {
   id: string;
@@ -18,44 +17,7 @@ interface ActivityFeedProps {
 }
 
 export const ActivityFeed: React.FC<ActivityFeedProps> = ({ onOpenChat }) => {
-  const mockActivities: Activity[] = [
-    {
-      id: '1',
-      type: 'spark_received',
-      user: mockUsers[1],
-      content: 'sent you a Spark on your hiking post',
-      timestamp: '5 minutes ago',
-      postImage: 'https://images.pexels.com/photos/1365425/pexels-photo-1365425.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-      isNew: true
-    },
-    {
-      id: '2',
-      type: 'connection_made',
-      user: mockUsers[2],
-      content: 'You\'re now connected! 🎉',
-      timestamp: '1 hour ago',
-      isNew: true
-    },
-    {
-      id: '3',
-      type: 'profile_viewed',
-      user: mockUsers[3],
-      content: 'viewed your profile',
-      timestamp: '2 hours ago',
-      isNew: false
-    },
-    {
-      id: '4',
-      type: 'post_liked',
-      user: mockUsers[4],
-      content: 'liked your yoga session post',
-      timestamp: '3 hours ago',
-      postImage: 'https://images.pexels.com/photos/317155/pexels-photo-317155.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-      isNew: false
-    }
-  ];
-
-  const [activities] = useState<Activity[]>(mockActivities);
+  const [activities] = useState<Activity[]>([]);
 
   const getActivityIcon = (type: string) => {
     switch (type) {

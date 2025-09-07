@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Heart, MessageCircle, UserPlus, Sparkles, Clock, Check, X } from 'lucide-react';
 import { User } from '../App';
-import { mockUsers } from '../data/mockData';
 import { api } from '../lib/api';
 
 interface Notification {

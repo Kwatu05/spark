@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Search, MapPin, Heart, Sliders, X, Globe, Star, Home, Baby, BookOpen, Calendar, Clock, Users2, Navigation, Coffee, Flag } from 'lucide-react';
 import { ModerationModal } from './ModerationModal';
 import { User } from '../App';
-import { mockUsers } from '../data/mockData';
 import { api } from '../lib/api';
 
 interface DiscoverProps {
@@ -13,7 +12,7 @@ export const Discover: React.FC<DiscoverProps> = ({ onOpenChat }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [users, setUsers] = useState<User[]>([]);
   const [reportUserId, setReportUserId] = useState<string | null>(null);
   const [privacy, setPrivacy] = useState(() => {
     try { return JSON.parse(localStorage.getItem('app_privacy_settings') || '{}'); } catch { return {}; }

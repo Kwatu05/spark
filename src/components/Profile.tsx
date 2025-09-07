@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Settings, Edit3, MapPin, Briefcase, Heart, Grid, Bookmark, Sparkles, Camera, Users, Plus, Trash2, UserPlus, Crown, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { User } from '../App';
-import { mockPosts } from '../data/mockData';
 import { api } from '../lib/api';
 
 interface ProfileProps {
@@ -33,7 +32,7 @@ export const Profile: React.FC<ProfileProps> = ({ onOpenChat: _onOpenChat, onEdi
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string>('');
-  const [userPosts] = useState(mockPosts.filter(post => post.userId === 'current-user')); // Will be updated with real data
+  const [userPosts, setUserPosts] = useState<any[]>([]);
   const [privacy, setPrivacy] = useState(() => {
     try { return JSON.parse(localStorage.getItem('app_privacy_settings') || '{}'); } catch { return {}; }
   });
@@ -44,7 +43,20 @@ export const Profile: React.FC<ProfileProps> = ({ onOpenChat: _onOpenChat, onEdi
   // Fetch user profile on component mount
   useEffect(() => {
     fetchProfile();
+    fetchUserPosts();
   }, []);
+
+  const fetchUserPosts = async () => {
+    try {
+      const response = await api.get<{ok: boolean; posts: any[]}>('/posts/user');
+      if (response.ok) {
+        setUserPosts(response.posts);
+      }
+    } catch (error) {
+      console.error('Failed to fetch user posts:', error);
+      setUserPosts([]);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -55,39 +67,11 @@ export const Profile: React.FC<ProfileProps> = ({ onOpenChat: _onOpenChat, onEdi
         setAvatarUrl(response.profile.avatar || localStorage.getItem('profile_avatar') || '');
       } else {
         console.error('Profile fetch failed:', response);
-        // Set a fallback user profile for development
-        setCurrentUser({
-          id: 'current-user',
-          name: 'Demo User',
-          age: 25,
-          bio: 'Welcome to Spark! This is a demo profile.',
-          location: 'Demo City',
-          profession: 'Demo Profession',
-          avatar: '',
-          interests: ['demo', 'spark', 'social'],
-          connectionPreference: 'Friends',
-          isVerified: false,
-          username: 'demouser',
-          email: 'demo@spark.com'
-        });
+        setCurrentUser(null);
       }
     } catch (error) {
       console.error('Failed to fetch profile:', error);
-      // Set a fallback user profile for development
-      setCurrentUser({
-        id: 'current-user',
-        name: 'Demo User',
-        age: 25,
-        bio: 'Welcome to Spark! This is a demo profile.',
-        location: 'Demo City',
-        profession: 'Demo Profession',
-        avatar: '',
-        interests: ['demo', 'spark', 'social'],
-        connectionPreference: 'Friends',
-        isVerified: false,
-        username: 'demouser',
-        email: 'demo@spark.com'
-      });
+      setCurrentUser(null);
     } finally {
       setLoading(false);
     }
@@ -175,7 +159,13 @@ export const Profile: React.FC<ProfileProps> = ({ onOpenChat: _onOpenChat, onEdi
     return (
       <div className="max-w-4xl mx-auto px-4 py-6">
         <div className="text-center py-12">
-          <p className="text-gray-600">Failed to load profile. Please try again.</p>
+          <p className="text-gray-600">Please log in to view your profile.</p>
+          <button 
+            onClick={() => navigate('/')}
+            className="mt-4 px-4 py-2 bg-coral text-white rounded-lg hover:bg-coral/90 transition-colors"
+          >
+            Go to Login
+          </button>
         </div>
       </div>
     );

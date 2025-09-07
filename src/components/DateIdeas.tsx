@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Bookmark, Plus, MapPin, Clock, Users, X } from 'lucide-react';
 import { Post } from '../App';
-import { mockPosts } from '../data/mockData';
 
 interface DateIdea {
   id: string;
