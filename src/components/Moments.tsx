@@ -30,12 +30,12 @@ export const Moments: React.FC<MomentsProps> = ({ onOpenChat }) => {
   const [reposts, setReposts] = useState<Record<string, { count: number; isReposted: boolean }>>({});
 
   useEffect(() => {
-    api.get<{ ok: boolean; moments: { id: string; videoUrl: string; likes: number; isLiked: boolean; coAuthorId?: string }[] }>(`/moments`)
+    api.get<{ ok: boolean; moments: { id: string; videoUrl: string; likes: number; isLiked: boolean; coAuthorId?: string; user: User }[] }>(`/moments`)
       .then((data) => {
         if (data?.ok && Array.isArray(data.moments)) {
-          const mapped: MomentVideo[] = data.moments.map((m, idx) => ({
+          const mapped: MomentVideo[] = data.moments.map((m) => ({
             id: m.id,
-            user: mockUsers[(idx % (mockUsers.length - 1)) + 1],
+            user: m.user,
             videoUrl: m.videoUrl,
             title: '',
             description: '',
@@ -43,10 +43,13 @@ export const Moments: React.FC<MomentsProps> = ({ onOpenChat }) => {
             isLiked: m.isLiked,
             activityTags: [],
           }));
-          setMoments(mapped.length ? mapped : mockMoments);
+          setMoments(mapped);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        // If API fails, set empty array instead of mock data
+        setMoments([]);
+      });
   }, []);
 
   useEffect(() => {
@@ -122,6 +125,19 @@ export const Moments: React.FC<MomentsProps> = ({ onOpenChat }) => {
 
   const currentMoment = moments[currentIndex];
 
+  // Show empty state if no moments
+  if (moments.length === 0) {
+    return (
+      <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
+        <div className="text-center text-white">
+          <Sparkles size={48} className="mx-auto mb-4 opacity-50" />
+          <h2 className="text-xl font-semibold mb-2">No Moments Yet</h2>
+          <p className="text-white/70">Check back later for new moments from your connections!</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-black z-50" onWheel={handleScroll}
       onTouchStart={(e) => { touchStartYRef.current = e.touches[0].clientY; }}
@@ -165,7 +181,7 @@ export const Moments: React.FC<MomentsProps> = ({ onOpenChat }) => {
                 <p className="text-white/70 text-sm">{currentMoment.user.age} • {currentMoment.user.location}</p>
               </div>
             </div>
-            {/* Co-author pill if present (using coAuthorId mapped to mockUsers for demo) */}
+            {/* Co-author pill if present */}
             {/* In a real app we'd resolve ID to user */}
             {/* Displayed below description for simplicity */}
             
