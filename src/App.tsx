@@ -1,6 +1,8 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { Navigation } from './components/Navigation';
+import MobileNavigation from './components/MobileNavigation';
+import PWAInstall from './components/PWAInstall';
 import { Feed } from './components/Feed';
 import { Discover } from './components/Discover';
 import { CreatePost } from './components/CreatePost';
@@ -40,6 +42,9 @@ const AdminConsole = lazy(() => import('./components/AdminConsole').then(m => ({
 import { Bell, MessageCircle } from 'lucide-react';
 import { api } from './lib/api';
 import { initializeExperiments, trackEvent } from './lib/experiments';
+import './styles/mobile.css';
+import './styles/mobile-nav.css';
+import './styles/pwa-install.css';
 
 export type User = {
   id: string;
@@ -109,6 +114,47 @@ function App() {
       initializeExperiments();
       trackEvent('app_loaded', { authenticated: false });
     });
+  }, []);
+
+  // PWA Service Worker Registration
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then((registration) => {
+          console.log('Service Worker registered successfully:', registration);
+          
+          // Check for updates
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // New content is available, show update notification
+                  if (confirm('New version available! Reload to update?')) {
+                    window.location.reload();
+                  }
+                }
+              });
+            }
+          });
+        })
+        .catch((error) => {
+          console.error('Service Worker registration failed:', error);
+        });
+    }
+
+    // Handle PWA install prompt
+    let deferredPrompt: any;
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      deferredPrompt = e;
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
   }, []);
 
   const handleTabChange = (tab: string) => {
@@ -245,6 +291,12 @@ function App() {
 
         {/* Bottom Navigation */}
         <Navigation activeTab={activeTab} onTabChange={handleTabChange} />
+        
+        {/* Mobile Navigation */}
+        <MobileNavigation />
+
+        {/* PWA Install Prompt */}
+        <PWAInstall />
 
         {/* Routed chat modal handled by /chat */}
       </div>
