@@ -53,9 +53,41 @@ export const Profile: React.FC<ProfileProps> = ({ onOpenChat: _onOpenChat, onEdi
       if (response.ok) {
         setCurrentUser(response.profile);
         setAvatarUrl(response.profile.avatar || localStorage.getItem('profile_avatar') || '');
+      } else {
+        console.error('Profile fetch failed:', response);
+        // Set a fallback user profile for development
+        setCurrentUser({
+          id: 'current-user',
+          name: 'Demo User',
+          age: 25,
+          bio: 'Welcome to Spark! This is a demo profile.',
+          location: 'Demo City',
+          profession: 'Demo Profession',
+          avatar: '',
+          interests: ['demo', 'spark', 'social'],
+          connectionPreference: 'Friends',
+          isVerified: false,
+          username: 'demouser',
+          email: 'demo@spark.com'
+        });
       }
     } catch (error) {
       console.error('Failed to fetch profile:', error);
+      // Set a fallback user profile for development
+      setCurrentUser({
+        id: 'current-user',
+        name: 'Demo User',
+        age: 25,
+        bio: 'Welcome to Spark! This is a demo profile.',
+        location: 'Demo City',
+        profession: 'Demo Profession',
+        avatar: '',
+        interests: ['demo', 'spark', 'social'],
+        connectionPreference: 'Friends',
+        isVerified: false,
+        username: 'demouser',
+        email: 'demo@spark.com'
+      });
     } finally {
       setLoading(false);
     }
