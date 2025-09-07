@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Repeat2, Sparkles } from 'lucide-react';
 import { Post } from '../App';
 import { api } from '../lib/api';
@@ -11,7 +11,6 @@ type RepostRecord = {
 const REPOSTS_STORAGE_KEY = 'reposts';
 
 export const ProfileReposts: React.FC = () => {
-  const [repostIds, setRepostIds] = useState<string[]>([]);
   const [repostedPosts, setRepostedPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -24,7 +23,6 @@ export const ProfileReposts: React.FC = () => {
         if (raw) {
           const parsed: RepostRecord[] = JSON.parse(raw);
           const ids = parsed.filter(r => !!r?.postId).map(r => r.postId);
-          setRepostIds(ids);
           
           // Fetch the actual posts from the API
           if (ids.length > 0) {
