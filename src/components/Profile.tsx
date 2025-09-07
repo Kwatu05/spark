@@ -83,14 +83,8 @@ export const Profile: React.FC<ProfileProps> = ({ onOpenChat: _onOpenChat, onEdi
 
 
 
-  // Mock data for reposts and collections
-  const [userReposts] = useState(
-    [
-      { id: '1', postId: 'post1', originalPost: mockPosts[1], repostedAt: '2024-01-15T10:00:00Z', visibility: 'public' as Visibility },
-      { id: '2', postId: 'post2', originalPost: mockPosts[2], repostedAt: '2024-01-14T15:30:00Z', visibility: 'friends' as Visibility },
-      { id: '3', postId: 'post3', originalPost: mockPosts[3], repostedAt: '2024-01-13T09:15:00Z', visibility: 'private' as Visibility }
-    ]
-  );
+  // User reposts - will be populated from real data
+  const [userReposts] = useState<any[]>([]);
 
   const [userCollections] = useState(
     [
