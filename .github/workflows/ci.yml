@@ -282,28 +282,15 @@ jobs:
     # Slack notification (optional - requires SLACK_WEBHOOK secret to be configured)
     # To enable: Add SLACK_WEBHOOK secret in GitHub repository settings
     # Get webhook URL from: https://api.slack.com/messaging/webhooks
-    - name: Check Slack webhook availability
-      id: slack-check
-      run: |
-        # Check if SLACK_WEBHOOK secret is configured
-        # This secret must be added in GitHub repository settings > Secrets and variables > Actions
-        if [ -n "${{ secrets.SLACK_WEBHOOK }}" ]; then
-          echo "slack_available=true" >> $GITHUB_OUTPUT
-          echo "Slack webhook is configured"
-        else
-          echo "slack_available=false" >> $GITHUB_OUTPUT
-          echo "Slack webhook not configured - skipping Slack notification"
-        fi
-      if: always()
-
-    - name: Notify deployment
+    # Note: Linter warning about SLACK_WEBHOOK is expected - secret must be configured in repo settings
+    - name: Notify deployment via Slack
       uses: 8398a7/action-slack@v3
       with:
         status: ${{ job.status }}
         channel: '#deployments'
         webhook_url: ${{ secrets.SLACK_WEBHOOK }}
         fields: repo,message,commit,author,action,eventName,ref,workflow
-      if: always() && steps.slack-check.outputs.slack_available == 'true'
+      if: always()
       continue-on-error: true
 
     # Fallback notification using GitHub's built-in system
