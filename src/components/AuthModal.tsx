@@ -56,7 +56,7 @@ export const AuthModal: React.FC<AuthModalProps> = () => {
         if (!numericAge || numericAge < 18) throw new Error('You must be 18 or older');
         if (!acceptedTerms) throw new Error('You must accept the Terms & Conditions');
         // Sign up path → send payload, then go to onboarding
-        await api.post('/auth/signup', {
+        const signupResponse = await api.post<{ok: boolean; accessToken?: string; user?: any; next?: string}>('/auth/signup', {
           fullName,
           username,
           email,
@@ -69,6 +69,12 @@ export const AuthModal: React.FC<AuthModalProps> = () => {
           isStudent,
           acceptedTerms
         });
+        
+        if (signupResponse.ok && signupResponse.accessToken) {
+          localStorage.setItem('access_token', signupResponse.accessToken);
+          localStorage.setItem('spark_session', '1');
+        }
+        
         trackEvent('user_signup', { 
           gender, 
           age: numericAge, 
@@ -79,7 +85,16 @@ export const AuthModal: React.FC<AuthModalProps> = () => {
         navigate('/onboarding');
       }
     } catch (err: any) {
-      setError(err?.message || 'Login failed');
+      console.error('Authentication error:', err);
+      if (err?.message?.includes('fetch')) {
+        setError('Unable to connect to server. Please check your internet connection.');
+      } else if (err?.message?.includes('401') || err?.message?.includes('Invalid credentials')) {
+        setError('Invalid username or password. Please try again.');
+      } else if (err?.message?.includes('400')) {
+        setError('Please check all required fields and try again.');
+      } else {
+        setError(err?.message || (isLogin ? 'Login failed' : 'Signup failed'));
+      }
     } finally {
       setLoading(false);
     }

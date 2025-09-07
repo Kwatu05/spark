@@ -22,6 +22,7 @@ const DateBuilder = lazy(() => import('./components/DateBuilder').then(m => ({ d
 const VerificationFlow = lazy(() => import('./components/VerificationFlow').then(m => ({ default: m.VerificationFlow })));
 const VerificationExpanded = lazy(() => import('./components/VerificationExpanded').then(m => ({ default: m.VerificationExpanded })));
 import { AuthVerification } from './components/AuthVerification';
+import { AuthDebug } from './components/AuthDebug';
 const CoupleBoards = lazy(() => import('./components/CoupleBoards').then(m => ({ default: m.CoupleBoards })));
 const CoupleMilestones = lazy(() => import('./components/CoupleMilestones').then(m => ({ default: m.CoupleMilestones })));
 import { CompatibilityQuiz } from './components/CompatibilityQuiz';
@@ -304,6 +305,9 @@ function App() {
 
         {/* PWA Install Prompt */}
         <PWAInstall />
+
+        {/* Auth Debug Component (Development Only) */}
+        {import.meta.env.DEV && <AuthDebug />}
 
         {/* Routed chat modal handled by /chat */}
       </div>

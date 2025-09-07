@@ -185,7 +185,7 @@ function createConfig(): AppConfig {
     server: {
       port: parseInt(process.env.PORT || '4000'),
       host: process.env.HOST || '0.0.0.0',
-      corsOrigins: parseArray(process.env.CORS_ORIGINS, isDevelopment ? ['http://localhost:3000', 'http://localhost:5173'] : []),
+      corsOrigins: parseArray(process.env.CORS_ORIGINS, isDevelopment ? ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:5174'] : []),
       trustProxy: process.env.TRUST_PROXY === 'true' || isProduction,
       requestTimeout: parseInt(process.env.REQUEST_TIMEOUT || '30000'),
       maxRequestSize: process.env.MAX_REQUEST_SIZE || '10mb'
