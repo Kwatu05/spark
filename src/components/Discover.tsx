@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Search, MapPin, Heart, Sliders, X, Globe, Star, Home, Baby, BookOpen, Calendar, Clock, Users2, Navigation, Coffee, Flag } from 'lucide-react';
+import { Search, MapPin, Heart, Sliders, X, Globe, Star, Home, Baby, BookOpen, Calendar, Clock, Users2, Navigation, Coffee, Flag, Sparkles } from 'lucide-react';
 import { ModerationModal } from './ModerationModal';
 import { User } from '../App';
 import { api } from '../lib/api';
+import SmartSuggestions from './SmartSuggestions';
 
 interface DiscoverProps {
   onOpenChat: (user: User) => void;
@@ -14,11 +15,28 @@ export const Discover: React.FC<DiscoverProps> = ({ onOpenChat }) => {
   const [showFilters, setShowFilters] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [reportUserId, setReportUserId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'browse' | 'suggestions'>('browse');
+  const [currentUserId, setCurrentUserId] = useState<string>('');
   const [privacy, setPrivacy] = useState(() => {
     try { return JSON.parse(localStorage.getItem('app_privacy_settings') || '{}'); } catch { return {}; }
   });
   useEffect(() => {
     try { setPrivacy(JSON.parse(localStorage.getItem('app_privacy_settings') || '{}')); } catch {}
+  }, []);
+
+  // Get current user ID for suggestions
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await api.get<{ok: boolean; user: any}>('/auth/session');
+        if (response.ok && response.user) {
+          setCurrentUserId(response.user.id);
+        }
+      } catch (error) {
+        console.error('Failed to fetch current user:', error);
+      }
+    };
+    fetchCurrentUser();
   }, []);
   
   // Advanced filter states
@@ -287,15 +305,53 @@ export const Discover: React.FC<DiscoverProps> = ({ onOpenChat }) => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
-      {/* Search Header */}
+      {/* View Mode Toggle */}
       <div className="mb-6">
         <div className="flex justify-center mb-4">
-          <div className="relative w-full max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-          <input
-            type="text"
-            placeholder="Search people, interests, activities..."
-            value={searchQuery}
+          <div className="bg-gray-100 rounded-lg p-1 flex">
+            <button
+              onClick={() => setViewMode('browse')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'browse'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Search size={16} className="inline mr-2" />
+              Browse All
+            </button>
+            <button
+              onClick={() => setViewMode('suggestions')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'suggestions'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Sparkles size={16} className="inline mr-2" />
+              Smart Matches
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Smart Suggestions View */}
+      {viewMode === 'suggestions' ? (
+        <SmartSuggestions 
+          onOpenChat={onOpenChat} 
+          currentUserId={currentUserId}
+        />
+      ) : (
+        <>
+          {/* Search Header */}
+          <div className="mb-6">
+            <div className="flex justify-center mb-4">
+              <div className="relative w-full max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="text"
+                placeholder="Search people, interests, activities..."
+                value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-12 py-3 bg-gray-100 rounded-xl border-0 focus:ring-2 focus:ring-coral/20 focus:bg-white transition-all duration-200"
             />
@@ -805,9 +861,11 @@ export const Discover: React.FC<DiscoverProps> = ({ onOpenChat }) => {
           <h3 className="text-xl font-semibold text-gray-900 mb-2">No matches found</h3>
           <p className="text-gray-600">Try adjusting your search or filters to find more people.</p>
         </div>
-      )}
-      {reportUserId && (
-        <ModerationModal targetId={reportUserId} kind="user" onClose={() => setReportUserId(null)} onSubmit={()=>{}} />
+          )}
+          {reportUserId && (
+            <ModerationModal targetId={reportUserId} kind="user" onClose={() => setReportUserId(null)} onSubmit={()=>{}} />
+          )}
+        </>
       )}
     </div>
   );

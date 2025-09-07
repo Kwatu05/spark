@@ -363,6 +363,65 @@ router.post('/:id/comments', commentLimiter, requireAuth, async (req: Authentica
   }
 });
 
+// Get reposted posts by IDs
+router.get('/reposted', requireAuth, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { ids } = req.query;
+    
+    if (!ids || typeof ids !== 'string') {
+      return res.status(400).json({ ok: false, error: 'Post IDs required' });
+    }
+
+    const postIds = ids.split(',').filter(id => id.trim());
+    
+    if (postIds.length === 0) {
+      return res.json({ ok: true, posts: [] });
+    }
+
+    const posts = await prisma.post.findMany({
+      where: {
+        id: { in: postIds }
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            avatar: true
+          }
+        },
+        _count: {
+          select: {
+            likes: true,
+            comments: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const formattedPosts = posts.map(post => ({
+      id: post.id,
+      userId: post.userId,
+      user: post.user,
+      type: post.type.toLowerCase(),
+      content: post.content || [],
+      caption: post.caption,
+      activityTags: post.activityTags ? JSON.parse(post.activityTags) : [],
+      likes: post._count.likes,
+      comments: post._count.comments,
+      createdAt: post.createdAt,
+      location: post.location
+    }));
+
+    res.json({ ok: true, posts: formattedPosts });
+  } catch (error) {
+    console.error('Get reposted posts error:', error);
+    res.status(500).json({ ok: false, error: 'Failed to fetch reposted posts' });
+  }
+});
+
 export default router;
 
 
