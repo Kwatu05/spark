@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ShieldAlert, CheckCircle2, Megaphone, Gauge, Users, Wrench, Activity, LineChart, ServerCog, Plus, Trash2, RefreshCcw, User, Crown, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShieldAlert, CheckCircle2, Megaphone, Gauge, Users, Wrench, Activity, LineChart, ServerCog, Plus, Trash2, RefreshCcw, User, Crown, LogOut, ChevronLeft, ChevronRight, Database } from 'lucide-react';
 import { api } from '../lib/api';
+import QueueDashboard from './QueueDashboard';
 
 type QueueItem = { id: string; type: 'post' | 'comment' | 'user'; reason: string; reportedAt: string };
 type Banner = { active: boolean; message: string };
@@ -12,7 +13,7 @@ type DashboardStats = {
   system: { uptime: number; requestsTotal: number; errorsTotal: number; avgResponseTime: number };
 };
 
-type AdminTab = 'dashboard' | 'featureFlags' | 'users' | 'infrastructure' | 'security' | 'analytics' | 'system' | 'moderation' | 'banner' | 'approvals' | 'reports' | 'groups' | 'events' | 'premium';
+type AdminTab = 'dashboard' | 'featureFlags' | 'users' | 'infrastructure' | 'security' | 'analytics' | 'system' | 'moderation' | 'banner' | 'approvals' | 'reports' | 'groups' | 'events' | 'premium' | 'queues';
 
 export const AdminConsole: React.FC = () => {
   const [tab, setTab] = useState<AdminTab>('dashboard');
@@ -309,6 +310,7 @@ export const AdminConsole: React.FC = () => {
     { id: 'moderation', label: 'Content Moderation', icon: CheckCircle2, adminOnly: false },
     { id: 'analytics', label: 'Performance Analytics', icon: LineChart, adminOnly: false },
     { id: 'system', label: 'System Monitoring', icon: Activity, adminOnly: true },
+    { id: 'queues', label: 'Queue Management', icon: Database, adminOnly: true },
     { id: 'featureFlags', label: 'Feature Flags', icon: Wrench, adminOnly: true },
     { id: 'banner', label: 'Outage Banner', icon: Megaphone, adminOnly: true },
     { id: 'approvals', label: 'Verifications', icon: CheckCircle2, adminOnly: false },
@@ -891,6 +893,18 @@ export const AdminConsole: React.FC = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {tab === 'queues' && (
+        <div className="bg-white rounded-xl border border-gray-200">
+          <div className="p-4 border-b border-gray-100 flex items-center gap-2">
+            <Database />
+            <h2 className="font-semibold">Queue Management</h2>
+          </div>
+          <div className="p-4">
+            <QueueDashboard />
           </div>
         </div>
       )}

@@ -34,6 +34,7 @@ import pushNotificationsRouter from './routes/pushNotifications';
 import loadTestingRouter from './routes/loadTesting';
 import gdprRouter from './routes/gdpr';
 import backupRouter from './routes/backup';
+import queueRouter from './routes/queue';
 import { metrics, requestTracing, logError } from './middleware/observability';
 import { 
   generalLimiter, 
@@ -57,6 +58,7 @@ import {
   breachDetection,
   cookieConsent
 } from './middleware/gdpr';
+import { initializeQueues, shutdownQueues } from './services/queueService';
 
 // Validate configuration
 const configValidation = validateConfig();
@@ -157,6 +159,7 @@ app.use('/push-notifications', pushNotificationsRouter);
 app.use('/load-testing', loadTestingRouter);
 app.use('/gdpr', gdprRouter);
 app.use('/backup', backupRouter);
+app.use('/queue', adminLimiter, queueRouter);
 // Enhanced metrics endpoint
 app.get(config.monitoring.metricsPath, (_req, res) => {
   res.json({
@@ -229,6 +232,15 @@ async function initializeServices() {
   } catch (error) {
     console.warn('⚠️  Analytics service unavailable:', (error as Error).message);
   }
+
+  try {
+    // Initialize queue system
+    console.log('⚡ Initializing queue system...');
+    await initializeQueues();
+    console.log('✅ Queue system initialized');
+  } catch (error) {
+    console.warn('⚠️  Queue system unavailable:', (error as Error).message);
+  }
 }
 
 // Start server
@@ -265,6 +277,14 @@ async function gracefulShutdown(signal: string) {
           console.log('Analytics service cleaned up');
         } catch (error) {
           console.warn('Error cleaning up analytics service:', (error as Error).message);
+        }
+
+        try {
+          // Shutdown queue system
+          await shutdownQueues();
+          console.log('Queue system shutdown');
+        } catch (error) {
+          console.warn('Error shutting down queue system:', (error as Error).message);
         }
   
   server.close(() => {
