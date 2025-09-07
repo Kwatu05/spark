@@ -279,19 +279,8 @@ jobs:
         # Add health check commands here
         # Example: curl -f https://api.spark.com/health || exit 1
         
-    # Slack notification (optional - requires SLACK_WEBHOOK secret to be configured)
-    # To enable: Add SLACK_WEBHOOK secret in GitHub repository settings
-    # Get webhook URL from: https://api.slack.com/messaging/webhooks
-    # Note: Linter warning about SLACK_WEBHOOK is expected - secret must be configured in repo settings
-    - name: Notify deployment via Slack
-      uses: 8398a7/action-slack@v3
-      with:
-        status: ${{ job.status }}
-        channel: '#deployments'
-        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-        fields: repo,message,commit,author,action,eventName,ref,workflow
-      if: always()
-      continue-on-error: true
+    # Slack notifications can be added later by configuring SLACK_WEBHOOK secret
+    # For now, using GitHub's built-in notification system
 
     # Fallback notification using GitHub's built-in system
     - name: Deployment notification
